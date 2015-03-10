@@ -3,8 +3,6 @@ package com.vaadin.tutorial.addressbook;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.VaadinServletConfiguration;
-import com.vaadin.data.Property;
-import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.event.FieldEvents;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
@@ -12,14 +10,17 @@ import com.vaadin.tutorial.addressbook.backend.Contact;
 import com.vaadin.tutorial.addressbook.backend.ContactService;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
-import java.util.Arrays;
 import javax.servlet.annotation.WebServlet;
+import org.vaadin.viritin.fields.MTable;
+import org.vaadin.viritin.fields.MTextField;
+import org.vaadin.viritin.fields.MValueChangeEvent;
+import org.vaadin.viritin.fields.MValueChangeListener;
+import org.vaadin.viritin.form.AbstractForm;
+import org.vaadin.viritin.layouts.MHorizontalLayout;
+import org.vaadin.viritin.layouts.MVerticalLayout;
 
 /* 
  * UI class is the starting point for your app. You may deploy it with VaadinServlet
@@ -29,7 +30,9 @@ import javax.servlet.annotation.WebServlet;
  */
 @Title("Addressbook")
 @Theme("valo")
-public class AddressbookUI extends UI {
+public class AddressbookUI extends UI implements
+        AbstractForm.SavedHandler<Contact>, AbstractForm.ResetHandler<Contact>,
+        AbstractForm.DeleteHandler<Contact> {
 
     /**
      * Vaadin applications are basically just Serlvlets, so lets define one with
@@ -43,24 +46,28 @@ public class AddressbookUI extends UI {
 
     private ContactService service = ContactService.createDemoService();
 
-    private TextField filter = new TextField();
+    private TextField filter = new MTextField()
+            .withInputPrompt("Filter contacts...");
+
     private Button newContact = new Button("New contact",
             new Button.ClickListener() {
 
                 @Override
                 public void buttonClick(ClickEvent event) {
-                    contactForm.edit(new Contact());
+                    contactForm.setEntity(new Contact());
+                    contactForm.focusFirst();
                 }
             });
 
-    private Table contactList = new Table();
+    private MTable<Contact> contactList = new MTable(Contact.class)
+            .withProperties("firstName", "lastName", "email")
+            .withFullWidth();
 
-    private ContactForm contactForm = new ContactForm(this);
+    private ContactForm contactForm = new ContactForm();
 
     @Override
     protected void init(VaadinRequest request) {
         // Configure components
-        filter.setInputPrompt("Filter contacts...");
         filter.addTextChangeListener(new FieldEvents.TextChangeListener() {
 
             @Override
@@ -72,32 +79,34 @@ public class AddressbookUI extends UI {
 
         contactForm.setVisible(false);
 
-        contactList.setSelectable(true);
-        contactList.addValueChangeListener(new Property.ValueChangeListener() {
+        contactList.addMValueChangeListener(
+                new MValueChangeListener<Contact>() {
 
-            @Override
-            public void valueChange(Property.ValueChangeEvent event) {
-                Contact contact = (Contact) event.getProperty().getValue();
-                if (contact != null) {
-                    contactForm.edit(contact);
-                } else {
-                    contactForm.setVisible(false);
-                }
-            }
-        });
+                    @Override
+                    public void valueChange(MValueChangeEvent<Contact> event) {
+                        Contact contact = event.getValue();
+                        if (contact != null) {
+                            contactForm.setEntity(contact);
+                            contactForm.focusFirst();
+                        } else {
+                            contactForm.setVisible(false);
+                        }
+                    }
+                });
         
+        contactForm.setHandler(this);
+
         // Build main layout
-        HorizontalLayout actions = new HorizontalLayout(filter, newContact);
-        actions.setWidth("100%");
-        filter.setWidth("100%");
-        actions.setExpandRatio(filter, 1);
-
-        VerticalLayout left = new VerticalLayout(actions, contactList);
-        left.setSizeFull();
-        contactList.setSizeFull();
-        left.setExpandRatio(contactList, 1);
-
-        setContent(new HorizontalSplitPanel(left, contactForm));
+        setContent(
+                new HorizontalSplitPanel(
+                        new MVerticalLayout()
+                        .add(new MHorizontalLayout()
+                                .expand(filter)
+                                .add(newContact))
+                        .expand(contactList),
+                        contactForm
+                )
+        );
 
         // List initial content from the "backend"
         listContacts();
@@ -108,20 +117,25 @@ public class AddressbookUI extends UI {
     }
 
     private void listContacts(String text) {
-        contactList.setContainerDataSource(
-                new BeanItemContainer<>(Contact.class, service.findAll(text)),
-                Arrays.asList("firstName", "lastName", "email"));
-        contactList.setColumnHeaders("First name", "Last name", "email");
+        contactList.setBeans(service.findAll(text));
         contactForm.setVisible(false);
     }
 
-    void save(Contact contact) {
+    @Override
+    public void onSave(Contact contact) {
         service.save(contact);
         listContacts();
     }
 
-    void deselect() {
+    @Override
+    public void onReset(Contact entity) {
         contactList.setValue(null);
+    }
+
+    @Override
+    public void onDelete(Contact entity) {
+        service.delete(entity);
+        listContacts();
     }
 
 }

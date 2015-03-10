@@ -51,7 +51,18 @@
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
             <version>1.9.2</version>
-            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.vaadin</groupId>
+            <artifactId>viritin</artifactId>
+            <version>1.29</version>
+        </dependency>
+        <!-- Note, typically Validation API is provided by environmentfor your, 
+             must be removed if deploying to Java EE server -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>5.1.3.Final</version>
         </dependency>
     </dependencies>
 

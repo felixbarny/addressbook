@@ -1,64 +1,31 @@
 package com.vaadin.tutorial.addressbook;
 
-import com.vaadin.data.fieldgroup.BeanFieldGroup;
-import com.vaadin.event.ShortcutAction;
-import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.tutorial.addressbook.backend.Contact;
-import com.vaadin.ui.Button;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.DateField;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.TextField;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.themes.ValoTheme;
+import org.vaadin.viritin.fields.MTextField;
+import org.vaadin.viritin.form.AbstractForm;
+import org.vaadin.viritin.layouts.MFormLayout;
 
 /**
  * The part of the UI modifying a Contact instance.
  */
-public class ContactForm extends VerticalLayout implements Button.ClickListener {
-
-    private Button save = new Button("Save", this);
-    private Button cancel = new Button("Cancel", this);
-    private final AddressbookUI mainUI;
-    private Contact contact;
+public class ContactForm extends AbstractForm {
 
     /* Vaadin contains an efficient data binding mechanism. DTO fields are bound
      to similarly named UI fields by naming convention, using @PropertyId annotation
      or manually. You can also autogenerate the fields, but typically this is not as 
      flexible as defining then in your UI code. */
-    private TextField firstName = new TextField("First name");
-    private TextField lastName = new TextField("Last name");
-    private TextField phone = new TextField("Phone");
-    private TextField email = new TextField("Email");
+    private TextField firstName = new MTextField("First name");
+    private TextField lastName = new MTextField("Last name");
+    private TextField phone = new MTextField("Phone");
+    private TextField email = new MTextField("Email");
     private DateField birthDate = new DateField("Birth date");
 
-    public ContactForm(AddressbookUI mainUI) {
-        this.mainUI = mainUI;
-        final HorizontalLayout actions = new HorizontalLayout(save, cancel);
-        actions.setSpacing(true);
-
-        addComponent(new FormLayout(actions, firstName, lastName, phone, email,
-                birthDate));
-        setMargin(new MarginInfo(false, true, false, true));
-
-        save.setStyleName(ValoTheme.BUTTON_PRIMARY);
-        save.setClickShortcut(ShortcutAction.KeyCode.ENTER);
-    }
-
     @Override
-    public void buttonClick(Button.ClickEvent event) {
-        if (event.getButton() == save) {
-            mainUI.save(contact);
-        } else {
-            mainUI.deselect();
-        }
-    }
-
-    public void edit(Contact contact) {
-        this.contact = contact;
-        BeanFieldGroup.bindFieldsUnbuffered(contact, this);
-        setVisible(true);
-        firstName.focus();
+    protected Component createContent() {
+        return new MFormLayout(getToolbar(), firstName, lastName, phone, email)
+                .withMargin(true);
     }
 
 }

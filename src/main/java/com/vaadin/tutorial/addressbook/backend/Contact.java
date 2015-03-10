@@ -2,6 +2,8 @@ package com.vaadin.tutorial.addressbook.backend;
 
 import java.io.Serializable;
 import java.util.Date;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import org.apache.commons.beanutils.BeanUtils;
 
 /**
@@ -11,10 +13,14 @@ public class Contact implements Serializable, Cloneable {
 
     private Long id;
 
-    private String firstName = "";
-    private String lastName = "";
-    private String phone = "";
-    private String email = "";
+    @NotNull(message = "Name is required")
+    private String firstName;
+    @NotNull(message = "Name is required")
+    private String lastName;
+    private String phone;
+    @NotNull(message = "Email is required")
+    @Pattern(regexp = ".+@.+\\.[a-z]+", message = "Must be valid email")
+    private String email;
     private Date birthDate;
 
     public Long getId() {
