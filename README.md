@@ -8,8 +8,13 @@ designed.
 
 Running the example
 -------------------
+```
+git clone git@github.com:felixbarny/addressbook.git
+cd addressbook
 mvn jetty:run
+```
 
+Open browser at [http://localhost:8080](http://localhost:8080)
 
 Importing in Eclipse
 --------------------
